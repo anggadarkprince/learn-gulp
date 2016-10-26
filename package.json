@@ -1,0 +1,14 @@
+{
+  "name": "learn-gulp",
+  "version": "1.0.0",
+  "description": "Learn how to using Gulp",
+  "main": "build/index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Angga Ari Wijaya",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  }
+}
