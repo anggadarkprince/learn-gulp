@@ -4,6 +4,7 @@
 var gulp = require('gulp');
 var newer = require('gulp-newer');
 var imagemin = require('gulp-imagemin');
+var del = require('del');
 
 // file locations
 var source = 'src/'
@@ -12,6 +13,13 @@ var images = {
     in: source + 'images/*.*',
     out: dest + 'images/'
 }
+
+// clean the build folder
+gulp.task('clean', function(){
+    del([
+        dest + '*'
+    ]);
+})
 
 // manage images
 gulp.task('images', function(){
