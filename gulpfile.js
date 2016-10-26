@@ -5,6 +5,7 @@ var gulp = require('gulp');
 var util = require('gulp-util');
 var newer = require('gulp-newer');
 var preprocess = require('gulp-preprocess');
+var htmlclean = require('gulp-htmlclean');
 var imagemin = require('gulp-imagemin');
 var del = require('del');
 pkg = require('./package.json');
@@ -40,10 +41,15 @@ gulp.task('clean', function () {
 });
 
 // build HTML files
-gulp.task('html', function(){
-    return gulp.src(html.in)
-        .pipe(preprocess({context: html.context}))
-        .pipe(gulp.dest(html.out))
+gulp.task('html', function () {
+    /*return gulp.src(html.in)
+     .pipe(preprocess({context: html.context}))
+     .pipe(gulp.dest(html.out))*/
+    var page = gulp.src(html.in).pipe(preprocess({context: html.context}));
+    if (!devBuild) {
+        page = page.pipe(htmlclean());
+    }
+    return page.pipe(gulp.dest(html.out));
 });
 
 // manage images
