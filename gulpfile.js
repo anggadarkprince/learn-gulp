@@ -33,4 +33,7 @@ gulp.task('images', function () {
 // default task, task run in almost same time not by order of array
 gulp.task('default', ['images'], function () {
     util.log('Run default gulp task');
+
+    // image changes
+    gulp.watch(images.in, ['images']);
 });
