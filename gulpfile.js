@@ -4,6 +4,7 @@
 var gulp = require('gulp');
 var util = require('gulp-util');
 var newer = require('gulp-newer');
+var preprocess = require('gulp-preprocess');
 var imagemin = require('gulp-imagemin');
 var del = require('del');
 pkg = require('./package.json');
@@ -13,6 +14,16 @@ pkg = require('./package.json');
 var devBuild = ((process.env.NODE_ENV || 'development').trim().toLowerCase() !== 'production')
 var source = 'src/'
 var dest = 'build/';
+var html = {
+    in: source + '*.html',
+    watch: [source + '*.html', source + 'template/**/*'],
+    out: dest,
+    context: {
+        devBuild: devBuild,
+        author: pkg.author,
+        version: pkg.version
+    }
+}
 var images = {
     in: source + 'images/*.*',
     out: dest + 'images/'
@@ -26,7 +37,14 @@ gulp.task('clean', function () {
     del([
         dest + '*'
     ]);
-})
+});
+
+// build HTML files
+gulp.task('html', function(){
+    return gulp.src(html.in)
+        .pipe(preprocess({context: html.context}))
+        .pipe(gulp.dest(html.out))
+});
 
 // manage images
 gulp.task('images', function () {
@@ -37,8 +55,11 @@ gulp.task('images', function () {
 });
 
 // default task, task run in almost same time not by order of array
-gulp.task('default', ['images'], function () {
+gulp.task('default', ['html', 'images'], function () {
     util.log('Run default gulp task');
+
+    // html changes
+    gulp.watch(html.watch, ['html']);
 
     // image changes
     gulp.watch(images.in, ['images']);
