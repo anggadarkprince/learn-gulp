@@ -1,4 +1,5 @@
 // Gulp.js configuration
+"use strict";
 
 // include gulp and plugins
 var gulp = require('gulp');
@@ -6,10 +7,11 @@ var util = require('gulp-util');
 var newer = require('gulp-newer');
 var preprocess = require('gulp-preprocess');
 var htmlclean = require('gulp-htmlclean');
+var sass = require('gulp-sass');
 var size = require('gulp-size');
 var imagemin = require('gulp-imagemin');
 var del = require('del');
-pkg = require('./package.json');
+var pkg = require('./package.json');
 
 // file locations
 // add constant variable on linux via terminal `export NODE_ENV=production` check echo $NODE_ENV
@@ -29,6 +31,20 @@ var html = {
 var images = {
     in: source + 'images/*.*',
     out: dest + 'images/'
+}
+var css = {
+    in: source + 'scss/main.scss',
+    watch: [source + 'scss/**/*'],
+    out: dest + 'css/',
+    sassOpts: {
+        outputStyle: devBuild ? 'nested' : 'compressed',
+        precision: 3,
+        errLogToConsole: true
+    }
+}
+var fonts = {
+    in: source + 'fonts/*.*',
+    out: css.out + 'fonts'
 }
 
 // show build type
@@ -61,11 +77,25 @@ gulp.task('images', function () {
     return gulp.src(images.in)
         .pipe(newer(images.out))
         .pipe(imagemin())
-        .pipe(gulp.dest(images.out))
+        .pipe(gulp.dest(images.out));
+});
+
+// copy fonts
+gulp.task('fonts', function () {
+    return gulp.src(fonts.in)
+        .pipe(newer(fonts.out))
+        .pipe(gulp.dest(fonts.out));
+});
+
+// compile sass
+gulp.task('sass', function () {
+    return gulp.src(css.in)
+        .pipe(sass(css.sassOpts))
+        .pipe(gulp.dest(css.out));
 });
 
 // default task, task run in almost same time not by order of array
-gulp.task('default', ['html', 'images'], function () {
+gulp.task('default', ['html', 'images', 'fonts', 'sass'], function () {
     util.log('Run default gulp task');
 
     // html changes
@@ -73,4 +103,10 @@ gulp.task('default', ['html', 'images'], function () {
 
     // image changes
     gulp.watch(images.in, ['images']);
+
+    // font changes
+    gulp.watch(fonts.in, ['fonts']);
+
+    // sass changes
+    gulp.watch(css.watch, ['sass']);
 });
