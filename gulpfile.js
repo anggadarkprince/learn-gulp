@@ -10,6 +10,8 @@ var htmlclean = require('gulp-htmlclean');
 var sass = require('gulp-sass');
 var size = require('gulp-size');
 var imagemin = require('gulp-imagemin');
+var imacss = require('gulp-imacss');
+var pleeease = require('gulp-pleeease');
 var del = require('del');
 var pkg = require('./package.json');
 
@@ -32,16 +34,30 @@ var images = {
     in: source + 'images/*.*',
     out: dest + 'images/'
 }
+var imguri = {
+    in: source + 'images/inline/*',
+    out: source + 'scss/images/',
+    filename: '_datauri.scss',
+    namespace: 'img'
+}
 var css = {
     in: source + 'scss/main.scss',
-    watch: [source + 'scss/**/*'],
+    watch: [source + 'scss/**/*', '!' + imguri.out + imguri.file], // except _datauri.scss because it generated and avoid infinite loop from scss watcher
     out: dest + 'css/',
     sassOpts: {
-        outputStyle: devBuild ? 'nested' : 'compressed',
+        outputStyle: 'nested',
         precision: 3,
         errLogToConsole: true
+    },
+    pleeeaseOpts: {
+        autoprefixer: {browsers: ['last 2 versions', '> 2%']},
+        rem: ['16px'], // 1 rem
+        pseudoElements: true,
+        mqpacker: true,
+        minifier: !devBuild
     }
 }
+
 var fonts = {
     in: source + 'fonts/*.*',
     out: css.out + 'fonts'
@@ -80,6 +96,14 @@ gulp.task('images', function () {
         .pipe(gulp.dest(images.out));
 });
 
+
+gulp.task('imguri', function () {
+    return gulp.src(imguri.in)
+        .pipe(imagemin())
+        .pipe(imacss(imguri.filename, imguri.namespace))
+        .pipe(gulp.dest(imguri.out));
+});
+
 // copy fonts
 gulp.task('fonts', function () {
     return gulp.src(fonts.in)
@@ -88,9 +112,12 @@ gulp.task('fonts', function () {
 });
 
 // compile sass
-gulp.task('sass', function () {
+gulp.task('sass', ['imguri'], function () {
     return gulp.src(css.in)
         .pipe(sass(css.sassOpts))
+        .pipe(size({title: 'CSS in'}))
+        .pipe(pleeease(css.pleeeaseOpts))
+        .pipe(size({title: 'CSS out'}))
         .pipe(gulp.dest(css.out));
 });
 
@@ -108,5 +135,5 @@ gulp.task('default', ['html', 'images', 'fonts', 'sass'], function () {
     gulp.watch(fonts.in, ['fonts']);
 
     // sass changes
-    gulp.watch(css.watch, ['sass']);
+    gulp.watch([css.watch, imguri.in], ['sass']);
 });
