@@ -12,6 +12,7 @@ var size = require('gulp-size');
 var imagemin = require('gulp-imagemin');
 var imacss = require('gulp-imacss');
 var pleeease = require('gulp-pleeease');
+var jshint = require('gulp-jshint');
 var del = require('del');
 var pkg = require('./package.json');
 
@@ -57,10 +58,14 @@ var css = {
         minifier: !devBuild
     }
 }
-
 var fonts = {
     in: source + 'fonts/*.*',
     out: css.out + 'fonts'
+}
+var js = {
+    in: source + 'js/*.*',
+    out: dest + 'js/',
+    filename: 'main.js'
 }
 
 // show build type
@@ -96,7 +101,7 @@ gulp.task('images', function () {
         .pipe(gulp.dest(images.out));
 });
 
-
+// image uri
 gulp.task('imguri', function () {
     return gulp.src(imguri.in)
         .pipe(imagemin())
@@ -121,8 +126,18 @@ gulp.task('sass', ['imguri'], function () {
         .pipe(gulp.dest(css.out));
 });
 
+gulp.task('js', function(){
+    return gulp.src(js.in)
+        .pipe(newer(js.out))
+        .pipe(jshint())
+        .pipe(jshint.reporter('default'))
+        .pipe(jshint.reporter('fail'))
+        .pipe(gulp.dest(js.out));
+});
+
+
 // default task, task run in almost same time not by order of array
-gulp.task('default', ['html', 'images', 'fonts', 'sass'], function () {
+gulp.task('default', ['html', 'images', 'fonts', 'sass', 'js'], function () {
     util.log('Run default gulp task');
 
     // html changes
@@ -136,4 +151,7 @@ gulp.task('default', ['html', 'images', 'fonts', 'sass'], function () {
 
     // sass changes
     gulp.watch([css.watch, imguri.in], ['sass']);
+
+    // javascript changes
+    gulp.watch(js.in, ['js']);
 });
