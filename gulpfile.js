@@ -5,6 +5,8 @@
 var gulp = require('gulp');
 var util = require('gulp-util');
 var newer = require('gulp-newer');
+var concat = require('gulp-concat');
+var deporder = require('gulp-deporder');
 var preprocess = require('gulp-preprocess');
 var htmlclean = require('gulp-htmlclean');
 var sass = require('gulp-sass');
@@ -13,6 +15,8 @@ var imagemin = require('gulp-imagemin');
 var imacss = require('gulp-imacss');
 var pleeease = require('gulp-pleeease');
 var jshint = require('gulp-jshint');
+var stripdebug = require('gulp-strip-debug');
+var uglify = require('gulp-uglify');
 var del = require('del');
 var pkg = require('./package.json');
 
@@ -127,12 +131,26 @@ gulp.task('sass', ['imguri'], function () {
 });
 
 gulp.task('js', function(){
-    return gulp.src(js.in)
-        .pipe(newer(js.out))
-        .pipe(jshint())
-        .pipe(jshint.reporter('default'))
-        .pipe(jshint.reporter('fail'))
-        .pipe(gulp.dest(js.out));
+    if(devBuild){
+        return gulp.src(js.in)
+            .pipe(newer(js.out))
+            .pipe(jshint())
+            .pipe(jshint.reporter('default'))
+            .pipe(jshint.reporter('fail'))
+            .pipe(gulp.dest(js.out));
+    } else {
+        del([
+            dest + 'js/*'
+        ]);
+        return gulp.src(js.in)
+            .pipe(deporder())
+            .pipe(concat(js.filename))
+            .pipe(size({title: 'JS in'}))
+            .pipe(stripdebug())
+            .pipe(uglify())
+            .pipe(size({title: 'JS out'}))
+            .pipe(gulp.dest(js.out));
+    }
 });
 
 
