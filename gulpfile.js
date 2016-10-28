@@ -18,6 +18,7 @@ var jshint = require('gulp-jshint');
 var stripdebug = require('gulp-strip-debug');
 var uglify = require('gulp-uglify');
 var del = require('del');
+var browsersync = require('browser-sync');
 var pkg = require('./package.json');
 
 // file locations
@@ -70,6 +71,15 @@ var js = {
     in: source + 'js/*.*',
     out: dest + 'js/',
     filename: 'main.js'
+}
+
+var syncOpts = {
+    server: {
+        baseDir: dest,
+        index: 'index.html'
+    },
+    open: false,
+    notify: true
 }
 
 // show build type
@@ -127,11 +137,13 @@ gulp.task('sass', ['imguri'], function () {
         .pipe(size({title: 'CSS in'}))
         .pipe(pleeease(css.pleeeaseOpts))
         .pipe(size({title: 'CSS out'}))
-        .pipe(gulp.dest(css.out));
+        .pipe(gulp.dest(css.out))
+        .pipe(browsersync.reload({stream: true}));
 });
 
-gulp.task('js', function(){
-    if(devBuild){
+// build js into single file and compress
+gulp.task('js', function () {
+    if (devBuild) {
         return gulp.src(js.in)
             .pipe(newer(js.out))
             .pipe(jshint())
@@ -153,13 +165,17 @@ gulp.task('js', function(){
     }
 });
 
+// sync the browser with auto reload
+gulp.task('browsersync', function () {
+    browsersync(syncOpts);
+});
 
 // default task, task run in almost same time not by order of array
-gulp.task('default', ['html', 'images', 'fonts', 'sass', 'js'], function () {
+gulp.task('default', ['html', 'images', 'fonts', 'sass', 'js', 'browsersync'], function () {
     util.log('Run default gulp task');
 
     // html changes
-    gulp.watch(html.watch, ['html']);
+    gulp.watch(html.watch, ['html', browsersync.reload]);
 
     // image changes
     gulp.watch(images.in, ['images']);
@@ -171,5 +187,5 @@ gulp.task('default', ['html', 'images', 'fonts', 'sass', 'js'], function () {
     gulp.watch([css.watch, imguri.in], ['sass']);
 
     // javascript changes
-    gulp.watch(js.in, ['js']);
+    gulp.watch(js.in, ['js', browsersync.reload]);
 });
